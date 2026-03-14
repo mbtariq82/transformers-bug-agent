@@ -18,13 +18,13 @@ class IssueAdvisor:
     # Use a small frontier model available on the Hugging Face Hub.
     # `distilgpt2` is a lightweight, open model that works well for simple prompt tasks.
     DEFAULT_MODEL = "distilgpt2"
-    CANDIDATE_LABELS = ["comment", "pr", "ignore", "needs research"]
+    CANDIDATE_LABELS = ["comment", "pr", "ignore", "needs-research"]
 
     PROMPT_TEMPLATE = (
         "You are an assistant that reads a GitHub issue and provides an initial label and comment." "\n"
-        "Only use one of these labels: comment, pr, ignore, needs research.\n\n"
+        "Only use one of these labels: comment, pr, ignore, needs-research.\n\n"
         "Reply in the following exact format (no extra text):\n"
-        "Label: <one of comment|pr|ignore|needs research>\n"
+        "Label: <one of comment|pr|ignore|needs-research>\n"
         "Comment: <a short actionable note about next steps>\n\n"
         "ISSUE:\n{issue_text}\n\n"
         "RESPONSE:\n"
@@ -57,7 +57,7 @@ class IssueAdvisor:
 
         raw = out[0]["generated_text"][len(prompt) :].strip()
 
-        label = "needs research"
+        label = "needs-research"
         comment = ""
 
         # Parse best-effort lines; allow missing Comment line.
@@ -68,7 +68,7 @@ class IssueAdvisor:
                 comment = line.split(":", 1)[1].strip()
 
         if label not in self.CANDIDATE_LABELS:
-            label = "needs research"
+            label = "needs-research"
 
         # If the model didn’t emit a comment line, use any remaining text as the comment.
         if not comment and raw:
@@ -82,7 +82,7 @@ class IssueAdvisor:
                 "comment": "Add a short comment summarizing what you found and next steps.",
                 "pr": "Consider opening a PR with a fix or reproduction case.",
                 "ignore": "No action needed; this looks already handled or out of scope.",
-                "needs research": "Try reproducing the issue locally and gather logs / a minimal repro.",
+                "needs-research": "Try reproducing the issue locally and gather logs / a minimal repro.",
             }
             comment = defaults.get(label, "No comment available.")
 

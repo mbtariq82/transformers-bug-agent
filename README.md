@@ -1,6 +1,6 @@
 # Transformers Bug Agent
 
-A small prototype tool that uses the GitHub Issues API + an open source language model to provide an initial label and comment for issues in the `huggingface/transformers` repository.
+A tool that uses the GitHub Issues API + an open source language model to initiate research on open issues in the `huggingface/transformers` repository by suggesting an initial label and next-step comment.
 
 The pipeline is intentionally simple:
 
@@ -10,7 +10,7 @@ The pipeline is intentionally simple:
    - `comment` (add a comment)
    - `pr` (submit a PR)
    - `ignore` (already being handled / not actionable)
-   - `needs research` (requires reproducing or investigating further)
+   - `needs-research` (requires reproducing or investigating further)
 4. **Seen issues tracking** — avoid re-processing the same issues by maintaining `seen_issues.json`.
 
 > This project is designed to run on machines with ~8–16GB of RAM. It uses an open-source model (default is a small NLI model) and keeps the GitHub API usage minimal.
@@ -72,5 +72,5 @@ python -m src.main --issue 44593
 ## Example Labels (from real issues)
 
 - `#44593` → ignore (someone already working on the issue)
-- `#44596` → needs research (reproduce issue)
+- `#44596` → needs-research (reproduce issue)
 - `#44485` → comment (references to `vllm` and `sglang`)
