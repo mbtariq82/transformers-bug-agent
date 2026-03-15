@@ -98,7 +98,7 @@ def main(argv: List[str] = None) -> int:
         LOG.warning("Issue #%s has no text to analyze", number)
         return 0
 
-    result = advisor.advise(prompt)
+    result = advisor.advise(prompt, number)
 
     LOG.info(
         "#%s %s => %s",
@@ -111,8 +111,10 @@ def main(argv: List[str] = None) -> int:
     print(f"#{number} {structured.get('title')}")
     print(f"URL: {structured.get('url')}")
     print(f"Action: {result.get('action')}")
-    if result.get("next_steps"):
-        print(f"Next steps: {result.get('next_steps')}")
+    if result.get("detail"):
+        print(f"Detail: {result.get('detail')}")
+    if result.get("research_folder"):
+        print(f"Research notebook: {result.get('research_folder')}")
     print()
 
     # No persistent state is tracked; rerun as needed.

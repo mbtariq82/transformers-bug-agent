@@ -6,7 +6,7 @@ The pipeline is intentionally simple in order to be efficient:
 
 1. **GitHub Issues API** — fetch open issues from a repo.
 2. **Issue Summarizer** — convert raw issue JSON into a structured object.
-3. **LM advisor** — run a lightweight open-source model to generate an action (`comment`, `pr`), a detail (comment text or branch name), and an optional research folder path.
+3. **LM advisor** — run a lightweight open-source model to generate an action (`comment`, `pr`), a detail (comment text or branch name), and a required research notebook path.
 
 > This project is designed to run on machines with ~8–16GB of RAM.
 
@@ -57,11 +57,6 @@ python -m src.main
 ```bash
 python -m src.main --issue 44593
 ```
-
-## Notes
-
-- The agent is intentionally simple and focuses on high-level issue assessment (action + next-step suggestion).
-- The model can be swapped via the `MODEL_NAME` environment variable.
 
 ## Example Labels (from real issues)
 

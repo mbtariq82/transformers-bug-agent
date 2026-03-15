@@ -24,7 +24,7 @@ class IssueAdvisor:
         "Reply in the following exact format (no extra text):\n"
         "Action: <comment|pr>\n"
         "Detail: <if action=comment, write a comment; if action=pr, write the branch name>\n"
-        "Research folder: <optional path or blank>\n\n"
+        "Research notebook: <path to a notebook file>\n\n"
         "ISSUE:\n{issue_text}\n\n"
         "RESPONSE:\n"
     )
@@ -42,8 +42,8 @@ class IssueAdvisor:
             LOG.error("Failed to load model %s: %s", self.model_name, str(e))
             raise
 
-    def advise(self, issue_text: str) -> Dict[str, str]:
-        """Return an action and a next-step suggestion."""
+    def advise(self, issue_text: str, issue_number: Optional[int] = None) -> Dict[str, str]:
+        """Return an action, detail, and a research notebook path."""
 
         prompt = self.PROMPT_TEMPLATE.format(issue_text=issue_text.strip())
 
@@ -66,7 +66,7 @@ class IssueAdvisor:
                 action = line.split(":", 1)[1].strip().lower()
             elif line.lower().startswith("detail:"):
                 detail = line.split(":", 1)[1].strip()
-            elif line.lower().startswith("research folder:"):
+            elif line.lower().startswith("research notebook:"):
                 research_folder = line.split(":", 1)[1].strip()
 
         if action not in self.CANDIDATE_ACTIONS:
@@ -84,6 +84,14 @@ class IssueAdvisor:
                 "pr": "Suggest a branch name or PR summary.",
             }
             detail = defaults.get(action, "No detail provided.")
+
+        # Research notebook is required; default to a sane path if the model omits it.
+        if not research_folder:
+            if issue_number is not None:
+                research_folder = f"research/issue-{issue_number}.ipynb"
+            else:
+                research_folder = "research/notebook.ipynb"
+
         return {
             "action": action,
             "detail": detail,
