@@ -1,6 +1,6 @@
 # Transformers Bug Agent
 
-A tool that uses the GitHub Issues API + an open source language model to initiate research on open issues in the `huggingface/transformers` repository by suggesting an initial label and next-step comment.
+A tool using open source LLMs to help maintainers research open issues in the `huggingface/transformers` repository by generating either a comment, research-folder or (if necessary) a PR.
 
 The pipeline is intentionally simple:
 
@@ -38,12 +38,12 @@ $env:GITHUB_TOKEN = 'ghp_...'
 
 If you see `rate limit exceeded`, set `GITHUB_TOKEN` and re-run.
 
-4. (Optional) Change the model used by the advisor. Default is a lightweight next-token predictor (`distilgpt2`):
+4. (Optional) Change the model used by the advisor. Default is `Qwen/Qwen-3.1.7b`:
 
 ```bash
-export MODEL_NAME=distilgpt2
+export MODEL_NAME=Qwen/Qwen-3.1.7b
 # Windows PowerShell
-$env:MODEL_NAME = 'distilgpt2'
+$env:MODEL_NAME = 'Qwen/Qwen-3.1.7b'
 ```
 
 5. Run the agent (defaults to the latest open Transformers issue):

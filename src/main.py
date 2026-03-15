@@ -101,17 +101,16 @@ def main(argv: List[str] = None) -> int:
     result = advisor.advise(prompt)
 
     LOG.info(
-        "#%s %s => %s (%.2f)",
+        "#%s %s => %s",
         number,
         structured.get("title"),
         result.get("action"),
-        result.get("score"),
     )
 
     print("---")
     print(f"#{number} {structured.get('title')}")
     print(f"URL: {structured.get('url')}")
-    print(f"Action: {result.get('action')} ({result.get('score'):.2f})")
+    print(f"Action: {result.get('action')}")
     if result.get("next_steps"):
         print(f"Next steps: {result.get('next_steps')}")
     print()

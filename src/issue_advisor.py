@@ -13,11 +13,9 @@ LOG = logging.getLogger(__name__)
 
 
 class IssueAdvisor:
-    """Recommend a label and an initial comment for a GitHub issue."""
-
     # Use a small frontier model available on the Hugging Face Hub.
-    # `distilgpt2` is a lightweight, open model that works well for simple prompt tasks.
-    DEFAULT_MODEL = "distilgpt2"
+    # Default to Qwen 3.1.7b for reasonable capabilities on modest hardware.
+    DEFAULT_MODEL = "Qwen/Qwen-3.1.7b"
     CANDIDATE_LABELS = ["comment", "pr", "research-folder"]
 
     PROMPT_TEMPLATE = (
@@ -44,7 +42,7 @@ class IssueAdvisor:
             raise
 
     def advise(self, issue_text: str) -> Dict[str, str]:
-        """Return a label, a short comment, and a pseudo-confidence score."""
+        """Return an action and a next-step suggestion."""
 
         prompt = self.PROMPT_TEMPLATE.format(issue_text=issue_text.strip())
 
@@ -85,10 +83,4 @@ class IssueAdvisor:
             }
             comment = defaults.get(action, "No next steps available.")
 
-        # The model doesn't provide a real confidence; synthesize a simple score.
-        score = 1.0 if action in self.CANDIDATE_LABELS else 0.0
-        return {"action": action, "next_steps": comment, "score": float(score)}
-
-        # The model doesn't provide a real confidence; synthesize a simple score.
-        score = 1.0 if label in self.CANDIDATE_LABELS else 0.0
-        return {"label": label, "comment": comment, "score": float(score)}
+        return {"action": action, "next_steps": comment}
