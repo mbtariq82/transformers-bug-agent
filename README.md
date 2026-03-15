@@ -1,12 +1,12 @@
 # Transformers Bug Agent
 
-A tool using open source LLMs to help maintainers research open issues in the `huggingface/transformers` repository by generating either a comment, research-folder or (if necessary) a PR.
+A tool using open source LLMs to help maintainers research issues in the `huggingface/transformers` repository by generating either a comment or a PR alongside a notebook explaining any decisions made. All changes are local, the agent is intentionally designed to have a human in the loop.
 
-The pipeline is intentionally simple:
+The pipeline is intentionally simple in order to be efficient:
 
 1. **GitHub Issues API** — fetch open issues from a repo.
 2. **Issue Summarizer** — convert raw issue JSON into a structured object.
-3. **LM advisor** — run a lightweight open-source model to generate an action (`comment`, `pr`, `research-folder`) plus a next-step suggestion
+3. **LM advisor** — run a lightweight open-source model to generate an action (`comment`, `pr`), a detail (comment text or branch name), and an optional research folder path.
 
 > This project is designed to run on machines with ~8–16GB of RAM.
 
@@ -38,12 +38,12 @@ $env:GITHUB_TOKEN = 'ghp_...'
 
 If you see `rate limit exceeded`, set `GITHUB_TOKEN` and re-run.
 
-4. (Optional) Change the model used by the advisor. Default is `Qwen/Qwen-3.1.7b`:
+4. (Optional) Change the model used by the advisor. Default is `Qwen/Qwen3-1.7b`:
 
 ```bash
-export MODEL_NAME=Qwen/Qwen-3.1.7b
+export MODEL_NAME=Qwen/Qwen3-1.7b
 # Windows PowerShell
-$env:MODEL_NAME = 'Qwen/Qwen-3.1.7b'
+$env:MODEL_NAME = 'Qwen/Qwen3-1.7b'
 ```
 
 5. Run the agent (defaults to the latest open Transformers issue):

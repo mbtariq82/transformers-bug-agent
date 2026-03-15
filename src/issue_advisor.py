@@ -15,15 +15,16 @@ LOG = logging.getLogger(__name__)
 class IssueAdvisor:
     # Use a small frontier model available on the Hugging Face Hub.
     # Default to Qwen 3.1.7b for reasonable capabilities on modest hardware.
-    DEFAULT_MODEL = "Qwen/Qwen-3.1.7b"
-    CANDIDATE_LABELS = ["comment", "pr", "research-folder"]
+    DEFAULT_MODEL = "Qwen/Qwen3-1.7b"
+    CANDIDATE_ACTIONS = ["comment", "pr"]
 
     PROMPT_TEMPLATE = (
-        "You are an assistant that reads a GitHub issue and recommends an action plus next steps." "\n"
-        "Only use one of these actions: comment, pr, research-folder.\n\n"
+        "You are an assistant that reads a GitHub issue and recommends an action.\n"
+        "Only use one of these actions: comment, pr.\n\n"
         "Reply in the following exact format (no extra text):\n"
-        "Action: <one of comment|pr|research-folder>\n"
-        "Next steps: <a short actionable suggestion — e.g., comment text, a research-folder plan, or a PR idea>\n\n"
+        "Action: <comment|pr>\n"
+        "Detail: <if action=comment, write a comment; if action=pr, write the branch name>\n"
+        "Research folder: <optional path or blank>\n\n"
         "ISSUE:\n{issue_text}\n\n"
         "RESPONSE:\n"
     )
@@ -56,31 +57,35 @@ class IssueAdvisor:
         raw = out[0]["generated_text"][len(prompt) :].strip()
 
         action = "comment"
-        comment = ""
+        detail = ""
+        research_folder = ""
 
-        # Parse best-effort lines; allow missing Next steps line.
+        # Parse best-effort lines; allow missing fields.
         for line in raw.splitlines():
             if line.lower().startswith("action:"):
                 action = line.split(":", 1)[1].strip().lower()
-            elif line.lower().startswith("next steps:"):
-                comment = line.split(":", 1)[1].strip()
+            elif line.lower().startswith("detail:"):
+                detail = line.split(":", 1)[1].strip()
+            elif line.lower().startswith("research folder:"):
+                research_folder = line.split(":", 1)[1].strip()
 
-        if action not in self.CANDIDATE_LABELS:
+        if action not in self.CANDIDATE_ACTIONS:
             action = "comment"
 
-        # If the model didn’t emit a Next steps line, use any remaining text as the suggestion.
-        if not comment and raw:
-            # Remove potential action line and treat the rest as the suggestion
+        # If the model didn’t emit a detail line, use any remaining text as the detail.
+        if not detail and raw:
             lines = [l for l in raw.splitlines() if not l.lower().startswith("action:")]
-            comment = "\n".join(lines).strip()
+            detail = "\n".join(lines).strip()
 
-        # If we still don’t have a next-steps suggestion, provide a safe default
-        if not comment:
+        # Ensure we always return something useful.
+        if not detail:
             defaults = {
                 "comment": "Add a short comment outlining what you found and next steps.",
-                "pr": "Consider opening a PR with a fix or reproduction case.",
-                "research-folder": "Create a research folder with repro steps, logs, and minimal examples.",
+                "pr": "Suggest a branch name or PR summary.",
             }
-            comment = defaults.get(action, "No next steps available.")
-
-        return {"action": action, "next_steps": comment}
+            detail = defaults.get(action, "No detail provided.")
+        return {
+            "action": action,
+            "detail": detail,
+            "research_folder": research_folder,
+        }
