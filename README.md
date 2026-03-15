@@ -10,34 +10,7 @@ Pipeline:
 > This project is designed to run on machines with ~8–16GB of RAM.
 
 ## Quick Start
-
-1. Create a Python virtual environment and activate it:
-
-```bash
-python -m venv .venv
-# macOS / Linux
-source .venv/bin/activate
-# Windows
-.\.venv\Scripts\activate
-```
-
-2. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-3. Set a GitHub token (required if you hit rate limits):
-
-```bash
-export GITHUB_TOKEN=ghp_...
-# Windows PowerShell
-$env:GITHUB_TOKEN = 'ghp_...'
-```
-
-If you see `rate limit exceeded`, set `GITHUB_TOKEN` and re-run.
-
-4. (Optional) Change the model used by the advisor. Default is `Qwen/Qwen3-1.7b`:
+(Optional) Change the model used by the advisor. Default is `Qwen/Qwen3-1.7b`:
 
 ```bash
 export MODEL_NAME=Qwen/Qwen3-1.7b
@@ -45,7 +18,7 @@ export MODEL_NAME=Qwen/Qwen3-1.7b
 $env:MODEL_NAME = 'Qwen/Qwen3-1.7b'
 ```
 
-5. Run the agent (defaults to the latest open Transformers issue):
+Run the agent (defaults to the latest open Transformers issue):
 
 ```bash
 python -m src.main
