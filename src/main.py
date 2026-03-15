@@ -113,8 +113,8 @@ def main(argv: List[str] = None) -> int:
     print(f"Action: {result.get('action')}")
     if result.get("detail"):
         print(f"Detail: {result.get('detail')}")
-    if result.get("research_folder"):
-        print(f"Research notebook: {result.get('research_folder')}")
+    if result.get("research_notebook"):
+        print(f"Research notebook: {result.get('research_notebook')}")
     print()
 
     # No persistent state is tracked; rerun as needed.

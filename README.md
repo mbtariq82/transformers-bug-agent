@@ -1,12 +1,11 @@
 # Transformers Bug Agent
 
-A tool using open source LLMs to help maintainers research issues in the `huggingface/transformers` repository by generating either a comment or a PR alongside a notebook explaining any decisions made. All changes are local, the agent is intentionally designed to have a human in the loop.
+A tool using open source LLMs to help maintainers research issues in the `huggingface/transformers` repository by generating either a comment or a PR alongside a notebook. All changes are local, the agent is intentionally designed to have a human in the loop.
 
-The pipeline is intentionally simple in order to be efficient:
-
+Pipeline:
 1. **GitHub Issues API** — fetch open issues from a repo.
 2. **Issue Summarizer** — convert raw issue JSON into a structured object.
-3. **LM advisor** — run a lightweight open-source model to generate an action (`comment`, `pr`), a detail (comment text or branch name), and a required research notebook path.
+3. **LM advisor** — run a lightweight open-source model to generate an action (`comment`, `pr`), a detail (comment text or branch name), and a research notebook path.
 
 > This project is designed to run on machines with ~8–16GB of RAM.
 

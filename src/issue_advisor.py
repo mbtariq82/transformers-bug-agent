@@ -58,7 +58,7 @@ class IssueAdvisor:
 
         action = "comment"
         detail = ""
-        research_folder = ""
+        research_notebook = ""
 
         # Parse best-effort lines; allow missing fields.
         for line in raw.splitlines():
@@ -67,7 +67,7 @@ class IssueAdvisor:
             elif line.lower().startswith("detail:"):
                 detail = line.split(":", 1)[1].strip()
             elif line.lower().startswith("research notebook:"):
-                research_folder = line.split(":", 1)[1].strip()
+                research_notebook = line.split(":", 1)[1].strip()
 
         if action not in self.CANDIDATE_ACTIONS:
             action = "comment"
@@ -86,14 +86,14 @@ class IssueAdvisor:
             detail = defaults.get(action, "No detail provided.")
 
         # Research notebook is required; default to a sane path if the model omits it.
-        if not research_folder:
+        if not research_notebook:
             if issue_number is not None:
-                research_folder = f"research/issue-{issue_number}.ipynb"
+                research_notebook = f"research/issue-{issue_number}.ipynb"
             else:
-                research_folder = "research/notebook.ipynb"
+                research_notebook = "research/notebook.ipynb"
 
         return {
             "action": action,
             "detail": detail,
-            "research_folder": research_folder,
+            "research_notebook": research_notebook,
         }
