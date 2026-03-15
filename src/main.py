@@ -26,20 +26,9 @@ def parse_args(argv: List[str] = None) -> argparse.Namespace:
         help="Repository to scan (owner/repo). Defaults to huggingface/transformers.",
     )
     parser.add_argument(
-        "--state",
-        default="open",
-        choices=["open", "closed", "all"],
-        help="Issue state to fetch.",
-    )
-    parser.add_argument(
         "--issue",
         type=int,
         help="Specific issue number to analyze (defaults to latest open issue).",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Do not mark issues as seen (keeps seen_issues.json unchanged).",
     )
     parser.add_argument(
         "--verbose",
@@ -80,8 +69,8 @@ def main(argv: List[str] = None) -> int:
             LOG.info("Fetching issue #%d", args.issue)
             issue = client.get_issue(args.repo, args.issue)
         else:
-            LOG.info("Fetching latest %s issue", args.state)
-            issue = client.get_latest_issue(args.repo, state=args.state)
+            LOG.info("Fetching latest open issue")
+            issue = client.get_latest_issue(args.repo)
 
         if issue is None:
             LOG.warning(
@@ -137,7 +126,7 @@ def main(argv: List[str] = None) -> int:
 
     new_seen = [number]
 
-    if not args.dry_run and new_seen:
+    if new_seen:
         mark_seen(new_seen)
         LOG.info("Marked %d new issues as seen", len(new_seen))
 
