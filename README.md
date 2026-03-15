@@ -7,7 +7,7 @@ The pipeline is intentionally simple:
 1. **GitHub Issues API** — fetch open issues from a repo.
 2. **Issue Summarizer** — convert raw issue JSON into a structured object.
 3. **LM advisor** — run a lightweight open-source model to generate an action (`comment`, `pr`, `research-folder`) plus a next-step suggestion
-4. **Seen issues tracking** — avoid re-processing the same issues by maintaining `seen_issues.json`.
+4. **No persistent tracking** — the tool is meant to be rerun per issue and does not store state between runs.
 
 > This project is designed to run on machines with ~8–16GB of RAM. It uses an open-source model (default is a small NLI model) and keeps the GitHub API usage minimal.
 
@@ -61,8 +61,7 @@ python -m src.main --issue 44593
 
 ## Notes
 
-- The agent is intentionally simple and focuses on high-level issue assessment (label + starter comment).
-- `seen_issues.json` is used to avoid re-processing issues; remove it to start fresh.
+- The agent is intentionally simple and focuses on high-level issue assessment (action + next-step suggestion).
 - The model can be swapped via the `MODEL_NAME` environment variable.
 
 ## Example Labels (from real issues)

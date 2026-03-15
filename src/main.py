@@ -9,7 +9,6 @@ from typing import List
 
 from .issue_advisor import IssueAdvisor
 from .github_client import GitHubClient
-from .storage import load_seen, mark_seen
 from .summarizer import format_issue_text, summarize_issue
 
 
@@ -60,9 +59,6 @@ def main(argv: List[str] = None) -> int:
     client = GitHubClient()
     advisor = IssueAdvisor()
 
-    seen = set(load_seen())
-    LOG.info("Loaded %d seen issues", len(seen))
-
     issue = None
     try:
         if args.issue is not None:
@@ -96,10 +92,6 @@ def main(argv: List[str] = None) -> int:
     structured = summarize_issue(issue)
     number = structured.get("number")
 
-    # If the user explicitly requested an issue, always process it (even if seen).
-    if args.issue is None and number in seen:
-        LOG.info("Issue #%d already seen, exiting", number)
-        return 0
 
     prompt = format_issue_text(structured)
     if not prompt:
@@ -124,11 +116,7 @@ def main(argv: List[str] = None) -> int:
         print(f"Next steps: {result.get('next_steps')}")
     print()
 
-    new_seen = [number]
-
-    if new_seen:
-        mark_seen(new_seen)
-        LOG.info("Marked %d new issues as seen", len(new_seen))
+    # No persistent state is tracked; rerun as needed.
 
     return 0
 
