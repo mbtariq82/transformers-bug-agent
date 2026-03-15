@@ -6,11 +6,7 @@ The pipeline is intentionally simple:
 
 1. **GitHub Issues API** — fetch open issues from a repo.
 2. **Issue Summarizer** — convert raw issue JSON into a structured object.
-3. **LM advisor** — run a lightweight open-source model locally to provide an initial label + comment for the issue:
-   - `comment` (add a comment)
-   - `pr` (submit a PR)
-   - `ignore` (already being handled / not actionable)
-   - `needs-research` (requires reproducing or investigating further)
+3. **LM advisor** — run a lightweight open-source model to generate an action (`comment`, `pr`, `research-folder`) plus a next-step suggestion
 4. **Seen issues tracking** — avoid re-processing the same issues by maintaining `seen_issues.json`.
 
 > This project is designed to run on machines with ~8–16GB of RAM. It uses an open-source model (default is a small NLI model) and keeps the GitHub API usage minimal.

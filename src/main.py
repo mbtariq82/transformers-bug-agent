@@ -123,16 +123,16 @@ def main(argv: List[str] = None) -> int:
         "#%s %s => %s (%.2f)",
         number,
         structured.get("title"),
-        result.get("label"),
+        result.get("action"),
         result.get("score"),
     )
 
     print("---")
     print(f"#{number} {structured.get('title')}")
     print(f"URL: {structured.get('url')}")
-    print(f"Category: {result.get('label')} ({result.get('score'):.2f})")
-    if result.get("comment"):
-        print(f"Comment: {result.get('comment')}")
+    print(f"Action: {result.get('action')} ({result.get('score'):.2f})")
+    if result.get("next_steps"):
+        print(f"Next steps: {result.get('next_steps')}")
     print()
 
     new_seen = [number]

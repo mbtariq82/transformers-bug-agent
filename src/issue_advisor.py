@@ -18,14 +18,14 @@ class IssueAdvisor:
     # Use a small frontier model available on the Hugging Face Hub.
     # `distilgpt2` is a lightweight, open model that works well for simple prompt tasks.
     DEFAULT_MODEL = "distilgpt2"
-    CANDIDATE_LABELS = ["comment", "pr", "ignore", "needs-research"]
+    CANDIDATE_LABELS = ["comment", "pr", "research-folder"]
 
     PROMPT_TEMPLATE = (
-        "You are an assistant that reads a GitHub issue and provides an initial label and comment." "\n"
-        "Only use one of these labels: comment, pr, ignore, needs-research.\n\n"
+        "You are an assistant that reads a GitHub issue and recommends an action plus next steps." "\n"
+        "Only use one of these actions: comment, pr, research-folder.\n\n"
         "Reply in the following exact format (no extra text):\n"
-        "Label: <one of comment|pr|ignore|needs-research>\n"
-        "Comment: <a short actionable note about next steps>\n\n"
+        "Action: <one of comment|pr|research-folder>\n"
+        "Next steps: <a short actionable suggestion — e.g., comment text, a research-folder plan, or a PR idea>\n\n"
         "ISSUE:\n{issue_text}\n\n"
         "RESPONSE:\n"
     )
@@ -57,34 +57,37 @@ class IssueAdvisor:
 
         raw = out[0]["generated_text"][len(prompt) :].strip()
 
-        label = "needs-research"
+        action = "comment"
         comment = ""
 
-        # Parse best-effort lines; allow missing Comment line.
+        # Parse best-effort lines; allow missing Next steps line.
         for line in raw.splitlines():
-            if line.lower().startswith("label:"):
-                label = line.split(":", 1)[1].strip().lower()
-            elif line.lower().startswith("comment:"):
+            if line.lower().startswith("action:"):
+                action = line.split(":", 1)[1].strip().lower()
+            elif line.lower().startswith("next steps:"):
                 comment = line.split(":", 1)[1].strip()
 
-        if label not in self.CANDIDATE_LABELS:
-            label = "needs-research"
+        if action not in self.CANDIDATE_LABELS:
+            action = "comment"
 
-        # If the model didn’t emit a comment line, use any remaining text as the comment.
+        # If the model didn’t emit a Next steps line, use any remaining text as the suggestion.
         if not comment and raw:
-            # Remove potential label line and treat the rest as comment
-            lines = [l for l in raw.splitlines() if not l.lower().startswith("label:")]
+            # Remove potential action line and treat the rest as the suggestion
+            lines = [l for l in raw.splitlines() if not l.lower().startswith("action:")]
             comment = "\n".join(lines).strip()
 
-        # If we still don’t have a comment, provide a safe default
+        # If we still don’t have a next-steps suggestion, provide a safe default
         if not comment:
             defaults = {
-                "comment": "Add a short comment summarizing what you found and next steps.",
+                "comment": "Add a short comment outlining what you found and next steps.",
                 "pr": "Consider opening a PR with a fix or reproduction case.",
-                "ignore": "No action needed; this looks already handled or out of scope.",
-                "needs-research": "Try reproducing the issue locally and gather logs / a minimal repro.",
+                "research-folder": "Create a research folder with repro steps, logs, and minimal examples.",
             }
-            comment = defaults.get(label, "No comment available.")
+            comment = defaults.get(action, "No next steps available.")
+
+        # The model doesn't provide a real confidence; synthesize a simple score.
+        score = 1.0 if action in self.CANDIDATE_LABELS else 0.0
+        return {"action": action, "next_steps": comment, "score": float(score)}
 
         # The model doesn't provide a real confidence; synthesize a simple score.
         score = 1.0 if label in self.CANDIDATE_LABELS else 0.0
