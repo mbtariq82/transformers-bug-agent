@@ -70,27 +70,13 @@ class IssueAdvisor:
                 research_notebook = line.split(":", 1)[1].strip()
 
         if action not in self.CANDIDATE_ACTIONS:
-            action = "comment"
+            raise ValueError(f"Invalid action from model output: {action!r}")
 
-        # If the model didn’t emit a detail line, use any remaining text as the detail.
-        if not detail and raw:
-            lines = [l for l in raw.splitlines() if not l.lower().startswith("action:")]
-            detail = "\n".join(lines).strip()
-
-        # Ensure we always return something useful.
         if not detail:
-            defaults = {
-                "comment": "Add a short comment outlining what you found and next steps.",
-                "pr": "Suggest a branch name or PR summary.",
-            }
-            detail = defaults.get(action, "No detail provided.")
+            raise ValueError("Missing required detail from model output.")
 
-        # Research notebook is required; default to a sane path if the model omits it.
         if not research_notebook:
-            if issue_number is not None:
-                research_notebook = f"research/issue-{issue_number}.ipynb"
-            else:
-                research_notebook = "research/notebook.ipynb"
+            raise ValueError("Missing required research notebook path from model output.")
 
         return {
             "action": action,
