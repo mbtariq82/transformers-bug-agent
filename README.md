@@ -1,5 +1,5 @@
 # Bug Agent
-A tool using open source LLMs to help maintainers research issues by generating either a notebook with a recommendation for either a comment or a PR. All changes are local, the agent is intentionally designed to have a human in the loop.
+A tool using open source LLMs to help maintainers research issues by generating a notebook with a recommendation for either a comment or a PR. All changes are local, the agent is intentionally designed to have a human in the loop.
 
 Pipeline:
 1. **GitHub Issues API** — fetch open issues from a repo.
