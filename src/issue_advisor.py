@@ -16,15 +16,9 @@ class IssueAdvisor:
     # Use a small frontier model available on the Hugging Face Hub.
     # Default to Qwen 3.1.7b for reasonable capabilities on modest hardware.
     DEFAULT_MODEL = "Qwen/Qwen3-1.7b"
-    CANDIDATE_ACTIONS = ["comment", "pr"]
 
     PROMPT_TEMPLATE = (
-        "You are an assistant that reads a GitHub issue and recommends an action.\n"
-        "Only use one of these actions: comment, pr.\n\n"
-        "Reply in the following exact format (no extra text):\n"
-        "Action: <comment|pr>\n"
-        "Detail: <if action=comment, write a comment; if action=pr, write the branch name>\n"
-        "Research notebook: <path to a notebook file>\n\n"
+        "You are an assistant that reads a GitHub issue and provides guidance.\n\n"
         "ISSUE:\n{issue_text}\n\n"
         "RESPONSE:\n"
     )
@@ -42,44 +36,18 @@ class IssueAdvisor:
             LOG.error("Failed to load model %s: %s", self.model_name, str(e))
             raise
 
-    def advise(self, issue_text: str, issue_number: Optional[int] = None) -> Dict[str, str]:
-        """Return an action, detail, and a research notebook path."""
+    def advise(self, issue_text: str, issue_number: Optional[int] = None) -> str:
+        """Return the raw model output for the given issue text."""
 
         prompt = self.PROMPT_TEMPLATE.format(issue_text=issue_text.strip())
 
         out = self.pipeline(
             prompt,
-            max_new_tokens=64,
+            max_new_tokens=256,
             temperature=0.0,
             do_sample=False,
         )
 
-        raw = out[0]["generated_text"][len(prompt) :].strip()
+        # The pipeline includes the prompt; remove it to return only the model response.
+        return out[0]["generated_text"][len(prompt) :].strip()
 
-        action = "comment"
-        detail = ""
-        research_notebook = ""
-
-        # Parse best-effort lines; allow missing fields.
-        for line in raw.splitlines():
-            if line.lower().startswith("action:"):
-                action = line.split(":", 1)[1].strip().lower()
-            elif line.lower().startswith("detail:"):
-                detail = line.split(":", 1)[1].strip()
-            elif line.lower().startswith("research notebook:"):
-                research_notebook = line.split(":", 1)[1].strip()
-
-        if action not in self.CANDIDATE_ACTIONS:
-            raise ValueError(f"Invalid action from model output: {action!r}")
-
-        if not detail:
-            raise ValueError("Missing required detail from model output.")
-
-        if not research_notebook:
-            raise ValueError("Missing required research notebook path from model output.")
-
-        return {
-            "action": action,
-            "detail": detail,
-            "research_notebook": research_notebook,
-        }

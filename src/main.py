@@ -39,56 +39,27 @@ def parse_args(argv: List[str] = None) -> argparse.Namespace:
 
 def main(argv: List[str] = None) -> int:
     args = parse_args(argv)
-    logging.basicConfig(
-        format="%(asctime)s [%(levelname)s] %(message)s", level=logging.DEBUG if args.verbose else logging.INFO
-    )
-
-    # Reduce noisy transformer/huggingface hub logging unless verbose is requested.
-    if not args.verbose:
-        logging.getLogger("transformers").setLevel(logging.ERROR)
-        logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
-
-        try:
-            # transformers uses its own logging controls; keep it quiet unless requested.
-            from transformers import logging as transformers_logging
-
-            transformers_logging.set_verbosity_error()
-        except Exception:
-            pass
+    #logging.basicConfig(
+    #    format="%(asctime)s [%(levelname)s] %(message)s", level=logging.DEBUG if args.verbose else logging.INFO
+    #)
 
     client = GitHubClient()
     advisor = IssueAdvisor()
 
     issue = None
-    try:
-        if args.issue is not None:
-            LOG.info("Fetching issue #%d", args.issue)
-            issue = client.get_issue(args.repo, args.issue)
-        else:
-            LOG.info("Fetching latest open issue")
-            issue = client.get_latest_issue(args.repo)
+    if args.issue is not None:
+        LOG.info("Fetching issue #%d", args.issue)
+        issue = client.get_issue(args.repo, args.issue)
+    else:
+        LOG.info("Fetching latest open issue")
+        issue = client.get_latest_issue(args.repo)
 
-        if issue is None:
-            LOG.warning(
-                "No issue found to analyze (this can happen if the repo returns only pull requests or has no matching issues)."
-            )
-            return 0
-    except Exception as exc:  # pragma: no cover
-        # GitHub rate limits are common when unauthenticated.
-        msg = str(exc)
-        if getattr(exc, "response", None) is not None and exc.response.status_code == 403:
-            remaining = exc.response.headers.get("X-RateLimit-Remaining")
-            reset = exc.response.headers.get("X-RateLimit-Reset")
-            LOG.error("GitHub rate limit exceeded (remaining=%s).", remaining)
-            LOG.error(
-                "Set GITHUB_TOKEN in your environment to avoid rate limits, or wait until rate limits reset."
-            )
-            if reset:
-                LOG.error("Rate limit resets at UNIX epoch seconds: %s", reset)
-        else:
-            LOG.error("Failed to fetch issue: %s", msg)
-        return 1
-
+    if issue is None:
+        LOG.warning(
+            "No issue found to analyze (this can happen if the repo returns only pull requests or has no matching issues)."
+        )
+        return 0
+    
     structured = summarize_issue(issue)
     number = structured.get("number")
 
@@ -98,23 +69,21 @@ def main(argv: List[str] = None) -> int:
         LOG.warning("Issue #%s has no text to analyze", number)
         return 0
 
-    result = advisor.advise(prompt, number)
+    response = advisor.advise(prompt, number)
 
+    # Log a short preview of the response for quick debugging.
     LOG.info(
         "#%s %s => %s",
         number,
         structured.get("title"),
-        result.get("action"),
+        response.replace("\n", " ")[:80],
     )
 
     print("---")
     print(f"#{number} {structured.get('title')}")
     print(f"URL: {structured.get('url')}")
-    print(f"Action: {result.get('action')}")
-    if result.get("detail"):
-        print(f"Detail: {result.get('detail')}")
-    if result.get("research_notebook"):
-        print(f"Research notebook: {result.get('research_notebook')}")
+    print("Response:")
+    print(response)
     print()
 
     # No persistent state is tracked; rerun as needed.

@@ -29,6 +29,14 @@ python -m src.main --issue 44593
 ```
 
 ## Example Labels (from real issues)
+<<<<<<< Updated upstream
 - `#44593` → ignore (someone already working on the issue)
 - `#44596` → needs-research (reproduce issue)
 - `#44485` → comment (references to `vllm` and `sglang`)
+=======
+
+- `#44593` → ignore, someone already working on the issue
+- `#44596` → should create setup for further research by recreating issue locally
+- `#44485` → references to `vllm` and `sglang`
+- `#44829` → need GPU to recreate issue
+>>>>>>> Stashed changes
