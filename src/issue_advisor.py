@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
+import shlex
+import subprocess
 from typing import Dict, List, Optional
 
 from transformers import pipeline
@@ -17,7 +20,10 @@ class IssueAdvisor:
     DEFAULT_MODEL = "Qwen/Qwen3-1.7b"
 
     PROMPT_TEMPLATE = (
-        "You are an assistant that reads a GitHub issue and provides guidance.\n\n"
+        "You are an assistant that reads a GitHub issue and provides guidance.\n"
+        "If you need to run terminal commands to investigate, output a JSON object like:\n"
+        "{{\"commands\": [\"ls -la\", \"pwd\"]}}\n"
+        "Otherwise, just provide text guidance.\n\n"
         "ISSUE:\n{issue_text}\n\n"
         "RESPONSE:\n"
     )
@@ -42,11 +48,34 @@ class IssueAdvisor:
 
         out = self.pipeline(
             prompt,
-            max_new_tokens=256,
-            temperature=0.0,
             do_sample=False,
         )
 
         # The pipeline includes the prompt; remove it to return only the model response.
-        return out[0]["generated_text"][len(prompt) :].strip()
+        raw_response = out[0]["generated_text"][len(prompt) :].strip()
+
+        # Try to parse as JSON for commands
+        try:
+            data = json.loads(raw_response)
+            if "commands" in data and isinstance(data["commands"], list):
+                return self._execute_commands(data["commands"])
+        except json.JSONDecodeError:
+            pass  # Not JSON, treat as text
+
+        return raw_response  # Fallback to text
+
+    def _execute_commands(self, commands: List[str]) -> str:
+        results = []
+        allowed_commands = {"ls", "pwd", "echo", "cat", "head", "tail"}  # Whitelist for safety
+        for cmd in commands:
+            base_cmd = shlex.split(cmd)[0]
+            if base_cmd not in allowed_commands:
+                results.append(f"Blocked unsafe command: {cmd}")
+                continue
+            try:
+                result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
+                results.append(f"$ {cmd}\n{result.stdout}\n{result.stderr}")
+            except Exception as e:
+                results.append(f"Error running {cmd}: {e}")
+        return "\n\n".join(results)
 
