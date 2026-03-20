@@ -39,4 +39,5 @@ python -m src.main --issue 44593
 - `#44596` → should create setup for further research by recreating issue locally
 - `#44485` → references to `vllm` and `sglang`
 - `#44829` → need GPU to recreate issue
+- `#44869` → existing issue/PR
 >>>>>>> Stashed changes
