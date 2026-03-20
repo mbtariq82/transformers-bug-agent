@@ -30,6 +30,12 @@ def parse_args(argv: List[str] = None) -> argparse.Namespace:
         help="Specific issue number to analyze (defaults to latest open issue).",
     )
     parser.add_argument(
+        "--model",
+        dest="model_name",
+        default=None,
+        help="Hugging Face model name for the advisor (overrides MODEL_NAME env var).",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Show debug logging.",
@@ -44,7 +50,7 @@ def main(argv: List[str] = None) -> int:
     #)
 
     client = GitHubClient()
-    advisor = IssueAdvisor()
+    advisor = IssueAdvisor(model_name=args.model_name)
 
     issue = None
     if args.issue is not None:
@@ -85,11 +91,6 @@ def main(argv: List[str] = None) -> int:
     print("Response:")
     print(response)
     print()
-
-    # No persistent state is tracked; rerun as needed.
-
-    return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

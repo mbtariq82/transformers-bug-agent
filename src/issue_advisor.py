@@ -14,7 +14,6 @@ LOG = logging.getLogger(__name__)
 
 class IssueAdvisor:
     # Use a small frontier model available on the Hugging Face Hub.
-    # Default to Qwen 3.1.7b for reasonable capabilities on modest hardware.
     DEFAULT_MODEL = "Qwen/Qwen3-1.7b"
 
     PROMPT_TEMPLATE = (
