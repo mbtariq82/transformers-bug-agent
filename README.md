@@ -4,11 +4,19 @@ An autonomous agent to help maintainers research issues/bugs. All changes are lo
 Pipeline:
 1. **GitHub Issues API** — fetch open issues from a repo.
 2. **Issue Summarizer** — convert raw issue JSON into a structured object.
-3. **LM advisor** — run a lightweight open-source model to generate an action (`comment`, `pr`), a detail (comment text or branch name), and a research notebook path.
+3. **LM advisor** — use SmolAgents with a lightweight open-source model (default: gpt2) to analyze the issue and provide guidance. For small-context models, it uses direct generation; for larger models, it employs a CodeAgent with tools for investigation.
 
+
+## Installation
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
 
 ## Quick Start
-(Optional) Change the model used by the advisor. Default is `HuggingFaceTB/SmolLM-1.7B`:
+(Optional) Change the model used by the advisor. Default is `gpt2`:
 
 ```bash
 export MODEL_NAME=Qwen/Qwen3-1.7b
