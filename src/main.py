@@ -41,6 +41,11 @@ def parse_args(argv: List[str] = None) -> argparse.Namespace:
 def main(argv: List[str] = None) -> int:
     args = parse_args(argv)
 
+    logging.basicConfig(
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        level=logging.DEBUG,
+    )
+
     client = GitHubClient()
     advisor = IssueAdvisor(model_name=args.model_name)
 
@@ -83,6 +88,8 @@ def main(argv: List[str] = None) -> int:
     print("Response:")
     print(response)
     print()
+
+    return 0
 
 if __name__ == "__main__":
     raise SystemExit(main())
