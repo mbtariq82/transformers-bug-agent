@@ -7,6 +7,7 @@ import logging
 import os
 import shlex
 import subprocess
+import traceback
 from typing import Dict, List, Optional
 
 from smolagents import CodeAgent, TransformersModel, tool
@@ -42,8 +43,8 @@ def execute_safe_command(command: str) -> str:
 
 
 class IssueAdvisor:
-    # Use a small, well-supported model for smolagents
-    DEFAULT_MODEL = "HuggingFaceTB/SmolLM-1.7B"
+    # Use a small, well-supported model for limited-memory environments
+    DEFAULT_MODEL = "gpt2"
 
     SYSTEM_PROMPT = (
         "You are an assistant that reads a GitHub issue and provides guidance.\n"
@@ -58,11 +59,13 @@ class IssueAdvisor:
             self.agent = CodeAgent(
                 tools=[execute_safe_command],
                 model=model,
-                system_prompt=self.SYSTEM_PROMPT,
+                # CodeAgent does not accept system_prompt directly; use built-in template.
+                # If custom prompt templates are needed, set prompt_templates explicitly.
                 max_steps=5,  # Limit steps to avoid infinite loops
             )
         except Exception as e:
             LOG.error("Failed to initialize SmolAgents with model %s: %s", self.model_name, str(e))
+            traceback.print_exc()
             raise
 
     def advise(self, issue_text: str, issue_number: Optional[int] = None) -> str:
