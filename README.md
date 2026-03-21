@@ -8,7 +8,7 @@ Pipeline:
 
 
 ## Quick Start
-(Optional) Change the model used by the advisor. Default is `Qwen/Qwen3-1.7b`:
+(Optional) Change the model used by the advisor. Default is `HuggingFaceTB/SmolLM-1.7B`:
 
 ```bash
 export MODEL_NAME=Qwen/Qwen3-1.7b
@@ -30,7 +30,7 @@ python -m src.main --issue 44593
 
 ## Example Labels (from real issues)
 
-- `#44593` → ignore, someone already working on the issue
+- `#44593` → someone already working on the issue
 - `#44596` → should create setup for further research by recreating issue locally
 - `#44485` → references to `vllm` and `sglang`
 - `#44829` → need GPU to recreate issue
