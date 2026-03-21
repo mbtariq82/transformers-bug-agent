@@ -55,12 +55,33 @@ class IssueAdvisor:
     def __init__(self, model_name: Optional[str] = None):
         self.model_name = model_name or os.getenv("MODEL_NAME") or self.DEFAULT_MODEL
         try:
-            model = TransformersModel(model_id=self.model_name)
+            # Many text models (like gpt2) do not provide a built-in chat template,
+            # and TransformersModel.apply_chat_template requires one.
+            # For a non-chat LM, we set a simple template covering user/assistant turns.
+            template = """{% for message in conversations %}"""
+            template += """
+{% if message.role == 'system' %}SYSTEM: {{ message.content }}\n
+"""
+            template += """
+{% elif message.role == 'user' %}USER: {{ message.content }}\n
+"""
+            template += """
+{% elif message.role == 'assistant' %}ASSISTANT: {{ message.content }}\n
+"""
+            template += """
+{% endif %}
+{% endfor %}
+"""
+            model = TransformersModel(
+                model_id=self.model_name,
+                apply_chat_template_kwargs={"chat_template": template},
+            )
+            if not getattr(model.tokenizer, "chat_template", None):
+                model.tokenizer.chat_template = template
+
             self.agent = CodeAgent(
                 tools=[execute_safe_command],
                 model=model,
-                # CodeAgent does not accept system_prompt directly; use built-in template.
-                # If custom prompt templates are needed, set prompt_templates explicitly.
                 max_steps=5,  # Limit steps to avoid infinite loops
             )
         except Exception as e:
