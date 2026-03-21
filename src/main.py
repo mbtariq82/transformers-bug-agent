@@ -35,19 +35,11 @@ def parse_args(argv: List[str] = None) -> argparse.Namespace:
         default=None,
         help="Hugging Face model name for the advisor (overrides MODEL_NAME env var).",
     )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Show debug logging.",
-    )
     return parser.parse_args(argv)
 
 
 def main(argv: List[str] = None) -> int:
     args = parse_args(argv)
-    #logging.basicConfig(
-    #    format="%(asctime)s [%(levelname)s] %(message)s", level=logging.DEBUG if args.verbose else logging.INFO
-    #)
 
     client = GitHubClient()
     advisor = IssueAdvisor(model_name=args.model_name)
