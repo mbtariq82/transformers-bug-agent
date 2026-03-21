@@ -58,7 +58,7 @@ class IssueAdvisor:
             # Many text models (like gpt2) do not provide a built-in chat template,
             # and TransformersModel.apply_chat_template requires one.
             # For a non-chat LM, we set a simple template covering user/assistant turns.
-            template = """{% for message in conversations %}"""
+            template = """{% for message in messages %}"""
             template += """
 {% if message.role == 'system' %}SYSTEM: {{ message.content }}\n
 """
@@ -72,16 +72,21 @@ class IssueAdvisor:
 {% endif %}
 {% endfor %}
 """
-            model = TransformersModel(
+            self.model = TransformersModel(
                 model_id=self.model_name,
                 apply_chat_template_kwargs={"chat_template": template},
             )
-            if not getattr(model.tokenizer, "chat_template", None):
-                model.tokenizer.chat_template = template
+            # For small models like gpt2, flatten_messages_as_text must be False to support string content correctly.
+            self.model.flatten_messages_as_text = False
+            # Ensure the tokenizer does not lose the template and uses it for chat formatting.
+            self.model.tokenizer.chat_template = template
+
+            if self.model.tokenizer.pad_token_id is None:
+                self.model.tokenizer.pad_token = self.model.tokenizer.eos_token
 
             self.agent = CodeAgent(
                 tools=[execute_safe_command],
-                model=model,
+                model=self.model,
                 max_steps=5,  # Limit steps to avoid infinite loops
             )
         except Exception as e:
@@ -89,15 +94,58 @@ class IssueAdvisor:
             traceback.print_exc()
             raise
 
+    def _generate_direct(self, issue_text: str) -> str:
+        """Generate an advisory response directly from the underlying model."""
+        try:
+            result = self.model.generate(
+                [{"role": "user", "content": issue_text}],
+                max_new_tokens=256,
+                stop_sequences=["\n\n"],
+            )
+            if hasattr(result, "content"):
+                return result.content.strip()
+            return str(result).strip()
+        except Exception as e:
+            LOG.error("Direct model generation failed: %s", str(e))
+            return f"Error analyzing issue: {e}"
+
     def advise(self, issue_text: str, issue_number: Optional[int] = None) -> str:
         """Return the agent's response for the given issue text."""
-        
-        prompt = f"Please analyze this GitHub issue and provide guidance:\n\n{issue_text.strip()}"
-        
+
+        cleaned_issue = issue_text.strip()
+        if not cleaned_issue:
+            return "No issue text provided for analysis."
+
+        # Guard against very long issues exceeding model context length.
+        max_model_tokens = getattr(self.model.tokenizer, "model_max_length", 1024)
+        max_issue_tokens = max_model_tokens - 256  # reserve room for instructions + response
+        try:
+            tokenized_issue = self.model.tokenizer(cleaned_issue, add_special_tokens=False)
+            issue_token_len = len(tokenized_issue["input_ids"])
+            if issue_token_len > max_issue_tokens:
+                LOG.warning(
+                    "Issue text is too long (%d tokens), truncating to %d tokens for model context",
+                    issue_token_len,
+                    max_issue_tokens,
+                )
+                truncated_ids = tokenized_issue["input_ids"][-max_issue_tokens:]
+                cleaned_issue = self.model.tokenizer.decode(truncated_ids, skip_special_tokens=True)
+        except Exception as e:
+            LOG.warning("Unable to compute token length for truncation: %s", e)
+
+        prompt = f"Please analyze this GitHub issue and provide guidance:\n\n{cleaned_issue}"
+        token_length = len(self.model.tokenizer(cleaned_issue, add_special_tokens=False)["input_ids"])
+        LOG.debug("Using cleaned issue length %d tokens before CodeAgent run", token_length)
+
+        # Use direct generation for models with narrow context windows to avoid large CodeAgent prompt overhead.
+        if getattr(self.model.tokenizer, "model_max_length", 1024) < 2048:
+            LOG.info("Model has small context window (%d tokens), using direct generation path", self.model.tokenizer.model_max_length)
+            return self._generate_direct(cleaned_issue)
+
         try:
             response = self.agent.run(prompt)
             return str(response)
         except Exception as e:
-            LOG.error("Error running agent: %s", str(e))
-            return f"Error analyzing issue: {e}"
+            LOG.error("Error running CodeAgent: %s", str(e))
+            return self._generate_direct(cleaned_issue)
 

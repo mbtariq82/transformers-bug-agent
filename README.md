@@ -1,5 +1,5 @@
 # Bug Agent
-A tool using open source LLMs to help maintainers research issues by generating a notebook with a recommendation for either a comment or a PR. All changes are local, the agent is intentionally designed to have a human in the loop.
+An autonomous agent to help maintainers research issues/bugs. All changes are local, the agent is intentionally designed to have a human in the loop.
 
 Pipeline:
 1. **GitHub Issues API** — fetch open issues from a repo.
@@ -30,8 +30,8 @@ python -m src.main --issue 44593
 
 ## Example Labels (from real issues)
 
-- `#44593` → someone already working on the issue
-- `#44596` → should create setup for further research by recreating issue locally
+- `#44593`, `#44910` → check PR
 - `#44485` → references to `vllm` and `sglang`
-- `#44829` → need GPU to recreate issue
+- `#44829` → need GPU
 - `#44869` → existing issue/PR
+- `#44912` → start by recreating issue
