@@ -4,7 +4,7 @@ An autonomous agent to help maintainers research issues/bugs. All changes are lo
 Pipeline:
 1. **GitHub Issues API** — fetch open issues from a repo.
 2. **Issue Summarizer** — convert raw issue JSON into a structured object.
-3. **LM advisor** — use SmolAgents with a lightweight open-source model (default: gpt2) to analyze the issue and provide guidance. For small-context models, it uses direct generation; for larger models, it employs a CodeAgent with tools for investigation.
+3. **LM advisor** — use SmolAgents with a lightweight open-source model (default: HuggingFaceTB/SmolLM-1.7B) to analyze the issue and provide guidance. For small-context/token-length models, the code runs a direct `model.generate()` path; for larger context models, it prefers CodeAgent tooling. (Current code does branch on `tokenizer.model_max_length` at runtime.)
 
 
 ## Installation
@@ -36,7 +36,7 @@ python -m src.main
 python -m src.main --issue 44593
 ```
 
-## Example Labels (from real issues)
+## Example Labels (from transformers)
 
 - `#44593`, `#44910` → check PR
 - `#44485` → references to `vllm` and `sglang`

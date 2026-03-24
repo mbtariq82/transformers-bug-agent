@@ -43,8 +43,8 @@ def execute_safe_command(command: str) -> str:
 
 
 class IssueAdvisor:
-    # Use a small, well-supported model for limited-memory environments
-    DEFAULT_MODEL = "gpt2"
+    # Default base model for the advisor
+    DEFAULT_MODEL = "HuggingFaceTB/SmolLM-1.7B"
 
     SYSTEM_PROMPT = (
         "You are an assistant that reads a GitHub issue and provides guidance.\n"
