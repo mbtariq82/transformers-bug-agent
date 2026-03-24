@@ -137,15 +137,11 @@ class IssueAdvisor:
         token_length = len(self.model.tokenizer(cleaned_issue, add_special_tokens=False)["input_ids"])
         LOG.debug("Using cleaned issue length %d tokens before CodeAgent run", token_length)
 
-        # Use direct generation for models with narrow context windows to avoid large CodeAgent prompt overhead.
-        if getattr(self.model.tokenizer, "model_max_length", 1024) < 2048:
-            LOG.info("Model has small context window (%d tokens), using direct generation path", self.model.tokenizer.model_max_length)
-            return self._generate_direct(cleaned_issue)
-
         try:
             response = self.agent.run(prompt)
             return str(response)
         except Exception as e:
             LOG.error("Error running CodeAgent: %s", str(e))
+            # Fallback to direct output by the model for any CodeAgent  issues.
             return self._generate_direct(cleaned_issue)
 

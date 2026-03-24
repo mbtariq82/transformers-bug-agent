@@ -4,7 +4,7 @@ An autonomous agent to help maintainers research issues/bugs. All changes are lo
 Pipeline:
 1. **GitHub Issues API** — fetch open issues from a repo.
 2. **Issue Summarizer** — convert raw issue JSON into a structured object.
-3. **LM advisor** — use SmolAgents with a lightweight open-source model (default: HuggingFaceTB/SmolLM-1.7B) to analyze the issue and provide guidance. For small-context/token-length models, the code runs a direct `model.generate()` path; for larger context models, it prefers CodeAgent tooling. (Current code does branch on `tokenizer.model_max_length` at runtime.)
+3. **LM advisor** — use SmolAgents with a lightweight open-source model (default: HuggingFaceTB/SmolLM-1.7B) to analyze the issue and provide guidance. Current code always prefers CodeAgent with tools (fallback to direct `model.generate()` only on CodeAgent failure).
 
 
 ## Installation
@@ -16,12 +16,12 @@ pip install -r requirements.txt
 ```
 
 ## Quick Start
-(Optional) Change the model used by the advisor. Default is `gpt2`:
+(Optional) Change the model used by the advisor. Default is `HuggingFaceTB/SmolLM-1.7B`:
 
 ```bash
-export MODEL_NAME=Qwen/Qwen3-1.7b
+export MODEL_NAME=HuggingFaceTB/SmolLM-1.7B
 # Windows PowerShell
-$env:MODEL_NAME = 'Qwen/Qwen3-1.7b'
+$env:MODEL_NAME = 'HuggingFaceTB/SmolLM-1.7B'
 ```
 
 Run the agent (defaults to the latest open Transformers issue):
