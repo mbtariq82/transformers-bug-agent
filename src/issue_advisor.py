@@ -1,45 +1,24 @@
-"""Simple LM-based issue advisor using SmolAgents."""
+"""
+Advanced issue advisor using SmolAgents framework with CodeAgent and TransformersModel.
+
+This module provides intelligent analysis of GitHub issues by leveraging large language models
+to understand issue content, identify potential root causes, and suggest actionable next steps
+for maintainers and contributors. The advisor uses a structured approach with tool-augmented
+reasoning capabilities to provide comprehensive guidance on bug reports and feature requests.
+"""
 
 from __future__ import annotations
 
 import json
 import logging
 import os
-import shlex
-import subprocess
 import traceback
 from typing import Dict, List, Optional
 
-from smolagents import CodeAgent, TransformersModel, tool
+from smolagents import CodeAgent, TransformersModel
 
 
 LOG = logging.getLogger(__name__)
-
-
-@tool
-def execute_safe_command(command: str) -> str:
-    """
-    Execute a safe terminal command and return the output.
-    
-    Args:
-        command: The command to execute
-        
-    Returns:
-        The command output or error message
-    """
-    allowed_commands = {"ls", "pwd", "echo", "cat", "head", "tail"}  # Whitelist for safety
-    base_cmd = shlex.split(command)[0]
-    if base_cmd not in allowed_commands:
-        return f"Blocked unsafe command: {command}"
-    
-    try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=10)
-        output = result.stdout
-        if result.stderr:
-            output += f"\nSTDERR: {result.stderr}"
-        return output.strip()
-    except Exception as e:
-        return f"Error running {command}: {e}"
 
 
 class IssueAdvisor:
@@ -48,7 +27,6 @@ class IssueAdvisor:
 
     SYSTEM_PROMPT = (
         "You are an assistant that reads a GitHub issue and provides guidance.\n"
-        "You can use the execute_safe_command tool to run terminal commands for investigation.\n"
         "Provide clear, actionable advice based on the issue content.\n"
     )
 
@@ -74,7 +52,6 @@ class IssueAdvisor:
 """
             self.model = TransformersModel(
                 model_id=self.model_name,
-                apply_chat_template_kwargs={"chat_template": template},
             )
             # For small models like gpt2, flatten_messages_as_text must be False to support string content correctly.
             self.model.flatten_messages_as_text = False
@@ -85,7 +62,7 @@ class IssueAdvisor:
                 self.model.tokenizer.pad_token = self.model.tokenizer.eos_token
 
             self.agent = CodeAgent(
-                tools=[execute_safe_command],
+                tools=[],
                 model=self.model,
                 max_steps=5,  # Limit steps to avoid infinite loops
             )
