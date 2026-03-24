@@ -16,6 +16,8 @@ pip install -r requirements.txt
 ```
 
 ## Quick Start
+The default model `HuggingFaceTB/SmolLM-1.7B` requires ~4GB RAM. For best results, run on Google Colab (free tier has 16GB) or a machine with sufficient memory.
+
 (Optional) Change the model used by the advisor. Default is `HuggingFaceTB/SmolLM-1.7B`:
 
 ```bash
