@@ -64,7 +64,7 @@ class IssueAdvisor:
             self.agent = CodeAgent(
                 tools=[],
                 model=self.model,
-                max_steps=5,  # Limit steps to avoid infinite loops
+                max_steps=1,  # Critical: reduce token-expansion from multi-step reasoning
             )
         except Exception as e:
             LOG.error("Failed to initialize SmolAgents with model %s: %s", self.model_name, str(e))
@@ -74,6 +74,28 @@ class IssueAdvisor:
     def _generate_direct(self, issue_text: str) -> str:
         """Generate an advisory response directly from the underlying model."""
         try:
+            model_max = getattr(self.model.tokenizer, "model_max_length", 1024)
+            inputs = self.model.tokenizer(
+                issue_text,
+                truncation=True,
+                max_length=model_max,
+                return_tensors="pt",
+                padding="longest",
+            )
+            pad_token_id = self.model.tokenizer.pad_token_id or self.model.tokenizer.eos_token_id
+            attention_mask = inputs.get("attention_mask")
+
+            if getattr(self.model, "model", None) is not None:
+                output_ids = self.model.model.generate(
+                    input_ids=inputs["input_ids"],
+                    attention_mask=attention_mask,
+                    max_new_tokens=256,
+                    pad_token_id=pad_token_id,
+                    eos_token_id=self.model.tokenizer.eos_token_id,
+                )
+                raw = self.model.tokenizer.decode(output_ids[0], skip_special_tokens=True)
+                return raw.strip()
+
             result = self.model.generate(
                 [{"role": "user", "content": issue_text}],
                 max_new_tokens=256,
@@ -95,7 +117,7 @@ class IssueAdvisor:
 
         # Guard against very long issues exceeding model context length.
         max_model_tokens = getattr(self.model.tokenizer, "model_max_length", 1024)
-        max_issue_tokens = max_model_tokens - 256  # reserve room for instructions + response
+        max_issue_tokens = int(max_model_tokens * 0.5)  # stronger hard cap for agent overhead
         try:
             tokenized_issue = self.model.tokenizer(cleaned_issue, add_special_tokens=False)
             issue_token_len = len(tokenized_issue["input_ids"])
@@ -105,8 +127,12 @@ class IssueAdvisor:
                     issue_token_len,
                     max_issue_tokens,
                 )
-                truncated_ids = tokenized_issue["input_ids"][-max_issue_tokens:]
+                front_ids = tokenized_issue["input_ids"][: max_issue_tokens // 2]
+                back_ids = tokenized_issue["input_ids"][-max_issue_tokens // 2 :]
+                truncated_ids = front_ids + back_ids
                 cleaned_issue = self.model.tokenizer.decode(truncated_ids, skip_special_tokens=True)
+                # For large inputs, avoid CodeAgent expansion by running direct generation path.
+                return self._generate_direct(cleaned_issue)
         except Exception as e:
             LOG.warning("Unable to compute token length for truncation: %s", e)
 
