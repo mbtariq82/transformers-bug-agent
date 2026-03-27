@@ -38,10 +38,11 @@ python -m src.main
 python -m src.main --issue 44593
 ```
 
-## Example Labels (from transformers)
+## Example Labels (from Transformers)
 
 - `#44593`, `#44910` → check PR
 - `#44485` → references to `vllm` and `sglang`
 - `#44829` → need GPU
 - `#44869` → existing issue/PR
 - `#44912` → start by recreating issue
+- `#44995` → PR #44950 will fix this
