@@ -72,7 +72,11 @@ def main(argv: List[str] = None) -> int:
         LOG.warning("Issue #%s has no text to analyze", number)
         return 0
 
-    response = advisor.advise(prompt, number)
+    try:
+        response = advisor.advise(prompt, number)
+    except Exception as e:
+        LOG.error("Advisor failed and cannot continue: %s", str(e))
+        return 1
 
     # Log a short preview of the response for quick debugging.
     LOG.info(

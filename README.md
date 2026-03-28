@@ -4,7 +4,7 @@ An autonomous agent to help maintainers research issues/bugs. All changes are lo
 Pipeline:
 1. **GitHub Issues API** — fetch open issues from a repo.
 2. **Issue Summarizer** — convert raw issue JSON into a structured object.
-3. **LM advisor** — use SmolAgents with a lightweight open-source model (default: HuggingFaceTB/SmolLM-1.7B) to analyze the issue and provide guidance. Current code always prefers CodeAgent with tools (fallback to direct `model.generate()` only on CodeAgent failure).
+- **LM advisor** — use SmolAgents with a lightweight open-source model (default: HuggingFaceTB/SmolLM-1.7B) to analyze the issue and provide guidance. Current code always prefers CodeAgent with tools and stops on CodeAgent failure instead of falling back to direct `model.generate()`.
 
 
 ## Installation
