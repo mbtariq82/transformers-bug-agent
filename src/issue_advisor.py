@@ -145,6 +145,5 @@ class IssueAdvisor:
             return str(response)
         except Exception as e:
             LOG.error("Error running CodeAgent: %s", str(e))
-            # Fallback to direct output by the model for any CodeAgent  issues.
-            return self._generate_direct(cleaned_issue)
+            raise RuntimeError(f"CodeAgent failed: {e}") from e
 
